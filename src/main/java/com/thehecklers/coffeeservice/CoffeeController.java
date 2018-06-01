@@ -1,5 +1,6 @@
 package com.thehecklers.coffeeservice;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -7,32 +8,32 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Random;
-
 @RestController
 @RequestMapping("/coffees")
 public class CoffeeController {
-    private final CoffeeRepository repo;
+    private final CoffeeService service;
 
-    public CoffeeController(CoffeeRepository repo) {
-        this.repo = repo;
+    public CoffeeController(CoffeeService service) {
+        this.service = service;
     }
 
     @GetMapping
     public Flux<Coffee> getAllCoffees() {
-        return repo.findAll();
+        return service.getAllCoffees();
     }
 
     @GetMapping("/{id}")
     public Mono<Coffee> getCoffeeById(@PathVariable String id) {
-        return repo.findById(id);
+        return service.getCoffeeById(id);
+    }
+
+    @GetMapping(value = "/{id}/orders", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<CoffeeOrder> getOrdersForCoffee(@PathVariable String id) {
+        return service.getOrdersForCoffee(id);
     }
 
     @GetMapping("/random")
     public Mono<Coffee> getRandomCoffee() {
-        return repo.count()
-                .map(Long::intValue)
-                .map(new Random()::nextInt)
-                .flatMap(repo.findAll()::elementAt);
+        return service.getRandomCoffee();
     }
 }
